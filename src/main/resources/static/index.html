@@ -1,0 +1,726 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Library API — Tester</title>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;700&family=DM+Mono:wght@300;400;500&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #0f0e0c;
+    --surface: #1a1814;
+    --surface2: #231f1a;
+    --border: #2e2820;
+    --accent: #c9a96e;
+    --accent2: #e8c99a;
+    --text: #f0e8d8;
+    --text-muted: #7a6e5f;
+    --text-dim: #4a4035;
+    --green: #6dab7e;
+    --red: #c96e6e;
+    --blue: #6e95c9;
+    --yellow: #c9b96e;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'DM Sans', sans-serif;
+    font-size: 14px;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+  }
+
+  /* Grain overlay */
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.04'/%3E%3C/svg%3E");
+    pointer-events: none;
+    z-index: 999;
+    opacity: 0.5;
+  }
+
+  /* Header */
+  header {
+    border-bottom: 1px solid var(--border);
+    padding: 20px 32px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    background: var(--surface);
+    position: sticky;
+    top: 0;
+    z-index: 100;
+  }
+
+  .logo {
+    font-family: 'Playfair Display', serif;
+    font-size: 22px;
+    color: var(--accent);
+    letter-spacing: 0.02em;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+
+  .logo-icon {
+    width: 28px;
+    height: 28px;
+    border: 1.5px solid var(--accent);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 14px;
+  }
+
+  .token-display {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    padding: 6px 14px;
+    font-family: 'DM Mono', monospace;
+    font-size: 11px;
+    color: var(--text-muted);
+    max-width: 360px;
+  }
+
+  .token-display .dot {
+    width: 7px;
+    height: 7px;
+    border-radius: 50%;
+    background: var(--text-dim);
+    flex-shrink: 0;
+    transition: background 0.3s;
+  }
+
+  .token-display.active .dot { background: var(--green); }
+  .token-display.active { color: var(--text); border-color: var(--green); }
+
+  #token-text {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    max-width: 280px;
+  }
+
+  /* Layout */
+  .layout {
+    display: grid;
+    grid-template-columns: 220px 1fr 380px;
+    flex: 1;
+    height: calc(100vh - 65px);
+  }
+
+  /* Sidebar */
+  .sidebar {
+    border-right: 1px solid var(--border);
+    overflow-y: auto;
+    background: var(--surface);
+  }
+
+  .sidebar-section {
+    padding: 20px 0;
+    border-bottom: 1px solid var(--border);
+  }
+
+  .sidebar-section:last-child { border-bottom: none; }
+
+  .section-label {
+    font-family: 'DM Mono', monospace;
+    font-size: 9px;
+    letter-spacing: 0.15em;
+    color: var(--text-dim);
+    text-transform: uppercase;
+    padding: 0 20px 10px;
+  }
+
+  .endpoint-btn {
+    width: 100%;
+    background: none;
+    border: none;
+    padding: 9px 20px;
+    text-align: left;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    color: var(--text-muted);
+    font-family: 'DM Sans', sans-serif;
+    font-size: 13px;
+    transition: all 0.15s;
+    border-left: 2px solid transparent;
+  }
+
+  .endpoint-btn:hover { color: var(--text); background: var(--surface2); }
+  .endpoint-btn.active { color: var(--accent); background: var(--surface2); border-left-color: var(--accent); }
+
+  .method-badge {
+    font-family: 'DM Mono', monospace;
+    font-size: 9px;
+    font-weight: 500;
+    padding: 2px 6px;
+    letter-spacing: 0.05em;
+    border-radius: 2px;
+    flex-shrink: 0;
+  }
+
+  .GET  { background: rgba(109,171,126,0.15); color: var(--green); }
+  .POST { background: rgba(110,149,201,0.15); color: var(--blue); }
+  .PUT  { background: rgba(201,185,110,0.15); color: var(--yellow); }
+  .DELETE { background: rgba(201,110,110,0.15); color: var(--red); }
+
+  /* Main panel */
+  .main {
+    overflow-y: auto;
+    padding: 32px;
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+  }
+
+  .panel-title {
+    font-family: 'Playfair Display', serif;
+    font-size: 24px;
+    color: var(--accent2);
+    margin-bottom: 4px;
+  }
+
+  .panel-subtitle {
+    color: var(--text-muted);
+    font-size: 13px;
+    font-family: 'DM Mono', monospace;
+  }
+
+  .field-group {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+  }
+
+  .field-label {
+    font-family: 'DM Mono', monospace;
+    font-size: 10px;
+    letter-spacing: 0.1em;
+    color: var(--text-muted);
+    text-transform: uppercase;
+  }
+
+  input, textarea {
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    color: var(--text);
+    padding: 10px 14px;
+    font-family: 'DM Mono', monospace;
+    font-size: 12px;
+    outline: none;
+    width: 100%;
+    transition: border-color 0.2s;
+    resize: vertical;
+  }
+
+  input:focus, textarea:focus { border-color: var(--accent); }
+
+  textarea { min-height: 120px; }
+
+  .send-btn {
+    background: var(--accent);
+    color: var(--bg);
+    border: none;
+    padding: 12px 28px;
+    font-family: 'DM Mono', monospace;
+    font-size: 12px;
+    font-weight: 500;
+    letter-spacing: 0.08em;
+    cursor: pointer;
+    text-transform: uppercase;
+    transition: all 0.2s;
+    align-self: flex-start;
+  }
+
+  .send-btn:hover { background: var(--accent2); }
+  .send-btn:active { transform: scale(0.98); }
+  .send-btn:disabled { opacity: 0.4; cursor: not-allowed; }
+
+  .auth-note {
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-left: 3px solid var(--accent);
+    padding: 10px 14px;
+    font-size: 12px;
+    color: var(--text-muted);
+    font-family: 'DM Mono', monospace;
+  }
+
+  .auth-note.warn { border-left-color: var(--yellow); }
+  .auth-note.ok { border-left-color: var(--green); }
+
+  /* Response panel */
+  .response-panel {
+    border-left: 1px solid var(--border);
+    background: var(--surface);
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+  }
+
+  .response-header {
+    padding: 16px 20px;
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+
+  .response-header span {
+    font-family: 'DM Mono', monospace;
+    font-size: 10px;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--text-muted);
+  }
+
+  .status-pill {
+    font-family: 'DM Mono', monospace;
+    font-size: 11px;
+    padding: 3px 10px;
+    border-radius: 2px;
+    display: none;
+  }
+
+  .status-pill.show { display: block; }
+  .status-2xx { background: rgba(109,171,126,0.2); color: var(--green); }
+  .status-4xx { background: rgba(201,110,110,0.2); color: var(--red); }
+  .status-5xx { background: rgba(201,110,110,0.2); color: var(--red); }
+
+  .response-body {
+    flex: 1;
+    overflow-y: auto;
+    padding: 20px;
+  }
+
+  pre {
+    font-family: 'DM Mono', monospace;
+    font-size: 12px;
+    line-height: 1.7;
+    color: var(--text-muted);
+    white-space: pre-wrap;
+    word-break: break-all;
+  }
+
+  pre.loaded { color: var(--text); }
+
+  .empty-state {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    height: 100%;
+    gap: 8px;
+    color: var(--text-dim);
+    font-family: 'DM Mono', monospace;
+    font-size: 11px;
+    text-align: center;
+  }
+
+  .empty-state-icon {
+    font-size: 28px;
+    margin-bottom: 4px;
+    opacity: 0.4;
+  }
+
+  /* JSON colors */
+  .json-key { color: var(--accent); }
+  .json-string { color: var(--green); }
+  .json-number { color: var(--blue); }
+  .json-bool { color: var(--yellow); }
+  .json-null { color: var(--red); }
+
+  /* Loading spinner */
+  .spinner {
+    width: 16px;
+    height: 16px;
+    border: 2px solid var(--border);
+    border-top-color: var(--accent);
+    border-radius: 50%;
+    animation: spin 0.7s linear infinite;
+    display: none;
+  }
+
+  .spinner.show { display: block; }
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  /* Fade in panels */
+  .main > * {
+    animation: fadeUp 0.3s ease both;
+  }
+
+  @keyframes fadeUp {
+    from { opacity: 0; transform: translateY(8px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  /* Scrollbar */
+  ::-webkit-scrollbar { width: 4px; }
+  ::-webkit-scrollbar-track { background: transparent; }
+  ::-webkit-scrollbar-thumb { background: var(--border); }
+  ::-webkit-scrollbar-thumb:hover { background: var(--text-dim); }
+
+  .copy-btn {
+    background: none;
+    border: 1px solid var(--border);
+    color: var(--text-muted);
+    padding: 3px 10px;
+    font-family: 'DM Mono', monospace;
+    font-size: 10px;
+    cursor: pointer;
+    transition: all 0.15s;
+  }
+  .copy-btn:hover { border-color: var(--accent); color: var(--accent); }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="logo">
+    <div class="logo-icon">📖</div>
+    Library API
+  </div>
+  <div class="token-display" id="token-status">
+    <div class="dot"></div>
+    <span id="token-text">Sin token — haz login o regístrate</span>
+    <button class="copy-btn" onclick="copyToken()" style="display:none" id="copy-token-btn">copiar</button>
+  </div>
+</header>
+
+<div class="layout">
+
+  <!-- Sidebar -->
+  <nav class="sidebar">
+    <div class="sidebar-section">
+      <div class="section-label">Auth</div>
+      <button class="endpoint-btn active" onclick="loadPanel('register')">
+        <span class="method-badge POST">POST</span> register
+      </button>
+      <button class="endpoint-btn" onclick="loadPanel('login')">
+        <span class="method-badge POST">POST</span> login
+      </button>
+    </div>
+    <div class="sidebar-section">
+      <div class="section-label">Authors</div>
+      <button class="endpoint-btn" onclick="loadPanel('getAuthors')">
+        <span class="method-badge GET">GET</span> all authors
+      </button>
+      <button class="endpoint-btn" onclick="loadPanel('getAuthor')">
+        <span class="method-badge GET">GET</span> author by id
+      </button>
+      <button class="endpoint-btn" onclick="loadPanel('addAuthor')">
+        <span class="method-badge POST">POST</span> add author
+      </button>
+      <button class="endpoint-btn" onclick="loadPanel('updateAuthor')">
+        <span class="method-badge PUT">PUT</span> update author
+      </button>
+      <button class="endpoint-btn" onclick="loadPanel('deleteAuthor')">
+        <span class="method-badge DELETE">DELETE</span> delete author
+      </button>
+    </div>
+    <div class="sidebar-section">
+      <div class="section-label">Books</div>
+      <button class="endpoint-btn" onclick="loadPanel('getBooks')">
+        <span class="method-badge GET">GET</span> all books
+      </button>
+      <button class="endpoint-btn" onclick="loadPanel('getBook')">
+        <span class="method-badge GET">GET</span> book by id
+      </button>
+      <button class="endpoint-btn" onclick="loadPanel('addBook')">
+        <span class="method-badge POST">POST</span> add book
+      </button>
+      <button class="endpoint-btn" onclick="loadPanel('updateBook')">
+        <span class="method-badge PUT">PUT</span> update book
+      </button>
+      <button class="endpoint-btn" onclick="loadPanel('deleteBook')">
+        <span class="method-badge DELETE">DELETE</span> delete book
+      </button>
+    </div>
+  </nav>
+
+  <!-- Main panel -->
+  <main class="main" id="main-panel">
+    <!-- Loaded dynamically -->
+  </main>
+
+  <!-- Response panel -->
+  <aside class="response-panel">
+    <div class="response-header">
+      <span>Response</span>
+      <div style="display:flex;align-items:center;gap:8px;">
+        <div class="spinner" id="spinner"></div>
+        <span class="status-pill" id="status-pill"></span>
+      </div>
+    </div>
+    <div class="response-body" id="response-body">
+      <div class="empty-state">
+        <div class="empty-state-icon">◎</div>
+        <div>Envía una petición</div>
+        <div>para ver la respuesta</div>
+      </div>
+    </div>
+  </aside>
+
+</div>
+
+<script>
+const BASE = 'http://localhost:8080';
+let token = null;
+
+// ─── Panel definitions ───────────────────────────────────────────
+const panels = {
+
+  register: {
+    title: 'Register', subtitle: 'POST /api/auth/register', auth: false,
+    fields: [
+      { id: 'reg_email', label: 'Email', type: 'input', placeholder: 'user@example.com' },
+      { id: 'reg_pass',  label: 'Password (min 8 chars)', type: 'input', placeholder: '••••••••' }
+    ],
+    execute: async (f) => {
+      const res = await apiFetch('POST', '/api/auth/register', { email: f.reg_email, password: f.reg_pass });
+      if (res.data?.token) saveToken(res.data.token);
+      return res;
+    }
+  },
+
+  login: {
+    title: 'Login', subtitle: 'POST /api/auth/login', auth: false,
+    fields: [
+      { id: 'log_email', label: 'Email', type: 'input', placeholder: 'user@example.com' },
+      { id: 'log_pass',  label: 'Password', type: 'input', placeholder: '••••••••' }
+    ],
+    execute: async (f) => {
+      const res = await apiFetch('POST', '/api/auth/login', { email: f.log_email, password: f.log_pass });
+      if (res.data?.token) saveToken(res.data.token);
+      return res;
+    }
+  },
+
+  getAuthors: {
+    title: 'All Authors', subtitle: 'GET /api/authors', auth: true,
+    fields: [],
+    execute: async () => apiFetch('GET', '/api/authors')
+  },
+
+  getAuthor: {
+    title: 'Author by ID', subtitle: 'GET /api/authors/{id}', auth: true,
+    fields: [{ id: 'ga_id', label: 'Author ID', type: 'input', placeholder: '1' }],
+    execute: async (f) => apiFetch('GET', `/api/authors/${f.ga_id}`)
+  },
+
+  addAuthor: {
+    title: 'Add Author', subtitle: 'POST /api/authors', auth: true,
+    fields: [{ id: 'aa_name', label: 'Name (2–20 chars)', type: 'input', placeholder: 'Gabriel García' }],
+    execute: async (f) => apiFetch('POST', '/api/authors', { name: f.aa_name })
+  },
+
+  updateAuthor: {
+    title: 'Update Author', subtitle: 'PUT /api/authors/{id}', auth: true,
+    fields: [
+      { id: 'ua_id',   label: 'Author ID', type: 'input', placeholder: '1' },
+      { id: 'ua_name', label: 'New Name (2–20 chars)', type: 'input', placeholder: 'Nuevo Nombre' }
+    ],
+    execute: async (f) => apiFetch('PUT', `/api/authors/${f.ua_id}`, { name: f.ua_name })
+  },
+
+  deleteAuthor: {
+    title: 'Delete Author', subtitle: 'DELETE /api/authors/{id}', auth: true,
+    fields: [{ id: 'da_id', label: 'Author ID', type: 'input', placeholder: '1' }],
+    execute: async (f) => apiFetch('DELETE', `/api/authors/${f.da_id}`)
+  },
+
+  getBooks: {
+    title: 'All Books', subtitle: 'GET /api/books', auth: true,
+    fields: [],
+    execute: async () => apiFetch('GET', '/api/books')
+  },
+
+  getBook: {
+    title: 'Book by ID', subtitle: 'GET /api/books/{id}', auth: true,
+    fields: [{ id: 'gb_id', label: 'Book ID', type: 'input', placeholder: '1' }],
+    execute: async (f) => apiFetch('GET', `/api/books/${f.gb_id}`)
+  },
+
+  addBook: {
+    title: 'Add Book', subtitle: 'POST /api/books', auth: true,
+    fields: [
+      { id: 'ab_title',    label: 'Title (2–20 chars)', type: 'input', placeholder: 'Cien años...' },
+      { id: 'ab_authorId', label: 'Author ID', type: 'input', placeholder: '1' }
+    ],
+    execute: async (f) => apiFetch('POST', '/api/books', { title: f.ab_title, authorId: Number(f.ab_authorId) })
+  },
+
+  updateBook: {
+    title: 'Update Book', subtitle: 'PUT /api/books/{id}', auth: true,
+    fields: [
+      { id: 'ub_id',       label: 'Book ID', type: 'input', placeholder: '1' },
+      { id: 'ub_title',    label: 'New Title (2–20 chars)', type: 'input', placeholder: 'Nuevo Titulo' },
+      { id: 'ub_authorId', label: 'Author ID', type: 'input', placeholder: '1' }
+    ],
+    execute: async (f) => apiFetch('PUT', `/api/books/${f.ub_id}`, { title: f.ub_title, authorId: Number(f.ub_authorId) })
+  },
+
+  deleteBook: {
+    title: 'Delete Book', subtitle: 'DELETE /api/books/{id}', auth: true,
+    fields: [{ id: 'db_id', label: 'Book ID', type: 'input', placeholder: '1' }],
+    execute: async (f) => apiFetch('DELETE', `/api/books/${f.db_id}`)
+  },
+};
+
+// ─── Render panel ────────────────────────────────────────────────
+function loadPanel(key) {
+  document.querySelectorAll('.endpoint-btn').forEach(b => b.classList.remove('active'));
+  event.currentTarget.classList.add('active');
+
+  const p = panels[key];
+  const main = document.getElementById('main-panel');
+
+  const authNote = p.auth
+    ? (token
+        ? `<div class="auth-note ok">✓ Token activo — petición autorizada</div>`
+        : `<div class="auth-note warn">⚠ Este endpoint requiere token. Haz login o regístrate primero.</div>`)
+    : `<div class="auth-note">Ruta pública — no requiere token</div>`;
+
+  const fields = p.fields.map(f => `
+    <div class="field-group">
+      <div class="field-label">${f.label}</div>
+      <input id="${f.id}" type="${f.id.includes('pass') ? 'password' : 'text'}" placeholder="${f.placeholder}" />
+    </div>
+  `).join('');
+
+  main.innerHTML = `
+    <div>
+      <div class="panel-title">${p.title}</div>
+      <div class="panel-subtitle">${p.subtitle}</div>
+    </div>
+    ${authNote}
+    ${fields}
+    <button class="send-btn" onclick="sendRequest('${key}')">→ Send</button>
+  `;
+
+  clearResponse();
+}
+
+// ─── Send request ────────────────────────────────────────────────
+async function sendRequest(key) {
+  const p = panels[key];
+  const fields = {};
+  p.fields.forEach(f => {
+    fields[f.id] = document.getElementById(f.id)?.value?.trim() || '';
+  });
+
+  setLoading(true);
+  clearResponse();
+
+  try {
+    const res = await p.execute(fields);
+    showResponse(res.status, res.data);
+  } catch(e) {
+    showResponse(0, { error: 'No se pudo conectar con el servidor. ¿Está corriendo en el puerto 8080?' });
+  } finally {
+    setLoading(false);
+  }
+}
+
+// ─── API fetch ───────────────────────────────────────────────────
+async function apiFetch(method, path, body) {
+  const headers = { 'Content-Type': 'application/json' };
+  if (token) headers['Authorization'] = `Bearer ${token}`;
+
+  const opts = { method, headers };
+  if (body && method !== 'GET' && method !== 'DELETE') {
+    opts.body = JSON.stringify(body);
+  }
+
+  const res = await fetch(BASE + path, opts);
+  let data;
+  const ct = res.headers.get('content-type') || '';
+  if (ct.includes('application/json')) {
+    data = await res.json();
+  } else {
+    const txt = await res.text();
+    data = txt ? { message: txt } : { message: `${res.status} ${res.statusText}` };
+  }
+
+  return { status: res.status, data };
+}
+
+// ─── Response display ────────────────────────────────────────────
+function showResponse(status, data) {
+  const pill = document.getElementById('status-pill');
+  pill.textContent = status ? `${status}` : 'ERROR';
+  pill.className = 'status-pill show ' + (status >= 500 ? 'status-5xx' : status >= 400 ? 'status-4xx' : 'status-2xx');
+
+  const pre = document.createElement('pre');
+  pre.className = 'loaded';
+  pre.innerHTML = syntaxHighlight(JSON.stringify(data, null, 2));
+
+  document.getElementById('response-body').innerHTML = '';
+  document.getElementById('response-body').appendChild(pre);
+}
+
+function clearResponse() {
+  document.getElementById('status-pill').className = 'status-pill';
+  document.getElementById('response-body').innerHTML = `
+    <div class="empty-state">
+      <div class="empty-state-icon">◎</div>
+      <div>Enviando...</div>
+    </div>`;
+}
+
+function setLoading(v) {
+  document.getElementById('spinner').className = 'spinner' + (v ? ' show' : '');
+  document.querySelector('.send-btn') && (document.querySelector('.send-btn').disabled = v);
+}
+
+// ─── Token management ────────────────────────────────────────────
+function saveToken(t) {
+  token = t;
+  const el = document.getElementById('token-status');
+  el.classList.add('active');
+  document.getElementById('token-text').textContent = t.substring(0, 40) + '...';
+  document.getElementById('copy-token-btn').style.display = 'block';
+}
+
+function copyToken() {
+  if (!token) return;
+  navigator.clipboard.writeText(token);
+  const btn = document.getElementById('copy-token-btn');
+  btn.textContent = '✓ copiado';
+  setTimeout(() => btn.textContent = 'copiar', 1500);
+}
+
+// ─── JSON syntax highlight ───────────────────────────────────────
+function syntaxHighlight(json) {
+  return json.replace(/("(\\u[a-zA-Z0-9]{4}|\\[^u]|[^\\"])*"(\s*:)?|\b(true|false|null)\b|-?\d+(?:\.\d*)?(?:[eE][+\-]?\d+)?)/g, (match) => {
+    let cls = 'json-number';
+    if (/^"/.test(match)) {
+      cls = /:$/.test(match) ? 'json-key' : 'json-string';
+    } else if (/true|false/.test(match)) {
+      cls = 'json-bool';
+    } else if (/null/.test(match)) {
+      cls = 'json-null';
+    }
+    return `<span class="${cls}">${match}</span>`;
+  });
+}
+
+// ─── Init ────────────────────────────────────────────────────────
+loadPanel('register');
+// Fix: override event on initial load
+document.querySelectorAll('.endpoint-btn')[0].classList.add('active');
+</script>
+</body>
+</html>
