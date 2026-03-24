@@ -556,7 +556,7 @@ const panels = {
   addBook: {
     title: 'Add Book', subtitle: 'POST /api/books', auth: true,
     fields: [
-      { id: 'ab_title',    label: 'Title (2–20 chars)', type: 'input', placeholder: 'cento anni...' },
+      { id: 'ab_title',    label: 'Title (2–20 chars)', type: 'input', placeholder: "cent'anni..." },
       { id: 'ab_authorId', label: 'Author ID', type: 'input', placeholder: '1' }
     ],
     execute: async (f) => apiFetch('POST', '/api/books', { title: f.ab_title, authorId: Number(f.ab_authorId) })
