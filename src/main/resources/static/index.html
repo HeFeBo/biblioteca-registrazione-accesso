@@ -394,8 +394,8 @@
   </div>
   <div class="token-display" id="token-status">
     <div class="dot"></div>
-    <span id="token-text">Sin token — haz login o regístrate</span>
-    <button class="copy-btn" onclick="copyToken()" style="display:none" id="copy-token-btn">copiar</button>
+    <span id="token-text">Nessun token — accedi o registrati</span>
+    <button class="copy-btn" onclick="copyToken()" style="display:none" id="copy-token-btn">copia</button>
   </div>
 </header>
 
@@ -467,8 +467,8 @@
     <div class="response-body" id="response-body">
       <div class="empty-state">
         <div class="empty-state-icon">◎</div>
-        <div>Envía una petición</div>
-        <div>para ver la respuesta</div>
+        <div>Invia una richiesta</div>
+        <div>per vedere la risposta</div>
       </div>
     </div>
   </aside>
@@ -530,7 +530,7 @@ const panels = {
     title: 'Update Author', subtitle: 'PUT /api/authors/{id}', auth: true,
     fields: [
       { id: 'ua_id',   label: 'Author ID', type: 'input', placeholder: '1' },
-      { id: 'ua_name', label: 'New Name (2–20 chars)', type: 'input', placeholder: 'Nuevo Nombre' }
+      { id: 'ua_name', label: 'New Name (2–20 chars)', type: 'input', placeholder: 'Nuovo Nome' }
     ],
     execute: async (f) => apiFetch('PUT', `/api/authors/${f.ua_id}`, { name: f.ua_name })
   },
@@ -556,7 +556,7 @@ const panels = {
   addBook: {
     title: 'Add Book', subtitle: 'POST /api/books', auth: true,
     fields: [
-      { id: 'ab_title',    label: 'Title (2–20 chars)', type: 'input', placeholder: 'Cien años...' },
+      { id: 'ab_title',    label: 'Title (2–20 chars)', type: 'input', placeholder: 'cento anni...' },
       { id: 'ab_authorId', label: 'Author ID', type: 'input', placeholder: '1' }
     ],
     execute: async (f) => apiFetch('POST', '/api/books', { title: f.ab_title, authorId: Number(f.ab_authorId) })
@@ -566,7 +566,7 @@ const panels = {
     title: 'Update Book', subtitle: 'PUT /api/books/{id}', auth: true,
     fields: [
       { id: 'ub_id',       label: 'Book ID', type: 'input', placeholder: '1' },
-      { id: 'ub_title',    label: 'New Title (2–20 chars)', type: 'input', placeholder: 'Nuevo Titulo' },
+      { id: 'ub_title',    label: 'New Title (2–20 chars)', type: 'input', placeholder: 'Nuovo Titolo' },
       { id: 'ub_authorId', label: 'Author ID', type: 'input', placeholder: '1' }
     ],
     execute: async (f) => apiFetch('PUT', `/api/books/${f.ub_id}`, { title: f.ub_title, authorId: Number(f.ub_authorId) })
@@ -589,9 +589,9 @@ function loadPanel(key) {
 
   const authNote = p.auth
     ? (token
-        ? `<div class="auth-note ok">✓ Token activo — petición autorizada</div>`
-        : `<div class="auth-note warn">⚠ Este endpoint requiere token. Haz login o regístrate primero.</div>`)
-    : `<div class="auth-note">Ruta pública — no requiere token</div>`;
+        ? `<div class="auth-note ok">✓ Token attivo — richiesta autorizzata</div>`
+        : `<div class="auth-note warn">⚠ Questo endpoint richiede un token. Effettua il login o registrati prima.</div>`)
+    : `<div class="auth-note">Endpoint pubblico — non richiede token</div>`;
 
   const fields = p.fields.map(f => `
     <div class="field-group">
@@ -628,7 +628,7 @@ async function sendRequest(key) {
     const res = await p.execute(fields);
     showResponse(res.status, res.data);
   } catch(e) {
-    showResponse(0, { error: 'No se pudo conectar con el servidor. ¿Está corriendo en el puerto 8080?' });
+    showResponse(0, { error: 'Impossibile connettersi. Il server è in esecuzione sulla porta 8080?' });
   } finally {
     setLoading(false);
   }
@@ -676,7 +676,7 @@ function clearResponse() {
   document.getElementById('response-body').innerHTML = `
     <div class="empty-state">
       <div class="empty-state-icon">◎</div>
-      <div>Enviando...</div>
+      <div>Inviando...</div>
     </div>`;
 }
 
@@ -698,8 +698,8 @@ function copyToken() {
   if (!token) return;
   navigator.clipboard.writeText(token);
   const btn = document.getElementById('copy-token-btn');
-  btn.textContent = '✓ copiado';
-  setTimeout(() => btn.textContent = 'copiar', 1500);
+  btn.textContent = '✓ copiato';
+  setTimeout(() => btn.textContent = 'copia', 1500);
 }
 
 // ─── JSON syntax highlight ───────────────────────────────────────

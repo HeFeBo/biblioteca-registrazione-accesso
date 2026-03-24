@@ -18,40 +18,43 @@ import jakarta.validation.ConstraintViolationException;
 
 @RestControllerAdvice
 public class GlobalExceptionHandler {
+
     @ExceptionHandler(MethodArgumentNotValidException.class)
     public ResponseEntity<Map<String, String>> handleValidationErrors(MethodArgumentNotValidException ex) {
-        Map<String, String> errores = new HashMap<>();
+        Map<String, String> errors = new HashMap<>();
         ex.getBindingResult().getFieldErrors().forEach(error -> {
-            errores.put(error.getField(), error.getDefaultMessage());
+            errors.put(error.getField(), error.getDefaultMessage());
         });
-        return ResponseEntity.badRequest().body(errores);
+        return ResponseEntity.badRequest().body(errors);
     }
 
     @ExceptionHandler(ConstraintViolationException.class)
     public ResponseEntity<List<String>> handleViolations(ConstraintViolationException ex) {
-        List<String> errores = ex.getConstraintViolations()
+        List<String> errors = ex.getConstraintViolations()
             .stream()
             .map(violation -> violation.getPropertyPath() + ": " + violation.getMessage())
             .collect(Collectors.toList());
-        return ResponseEntity.badRequest().body(errores);
+        return ResponseEntity.badRequest().body(errors);
     }
 
     @ExceptionHandler(HttpMessageNotReadableException.class)
     public ResponseEntity<String> handleMalformedJson(HttpMessageNotReadableException ex) {
-        return ResponseEntity.badRequest().body("El formato del cuerpo de la solicitud es inválido.");
+        return ResponseEntity.badRequest().body("Il formato del corpo della richiesta non è valido.");
     }
 
     @ExceptionHandler(MethodArgumentTypeMismatchException.class)
     public ResponseEntity<String> handleIncorrectType(MethodArgumentTypeMismatchException ex) {
-        String campo = ex.getName();
-        Class<?> tipo = ex.getRequiredType();
-        String tipoEsperado = tipo != null ? tipo.getSimpleName() : "desconocido";
-        return ResponseEntity.badRequest().body("El parámetro '" + campo + "' debe ser de tipo " + tipoEsperado);
+        String field = ex.getName();
+        Class<?> type = ex.getRequiredType();
+        String expectedType = type != null ? type.getSimpleName() : "sconosciuto";
+        return ResponseEntity.badRequest()
+                .body("Il parametro '" + field + "' deve essere di tipo " + expectedType);
     }
 
     @ExceptionHandler(MissingServletRequestParameterException.class)
     public ResponseEntity<String> handleMissingParameter(MissingServletRequestParameterException ex) {
-        return ResponseEntity.badRequest().body("Falta el parámetro obligatorio: " + ex.getParameterName());
+        return ResponseEntity.badRequest()
+                .body("Parametro obbligatorio mancante: " + ex.getParameterName());
     }
 
     @ExceptionHandler(AuthorNotFoundException.class)
@@ -68,5 +71,4 @@ public class GlobalExceptionHandler {
     public ResponseEntity<String> handleEmailAlreadyExists(EmailAlreadyExistsException ex) {
         return ResponseEntity.status(HttpStatus.CONFLICT).body(ex.getMessage());
     }
-
 }
